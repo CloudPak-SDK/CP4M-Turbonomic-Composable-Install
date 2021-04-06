@@ -11,12 +11,14 @@ Then download the IBM Turbonomic PPA there and then extract it:
 tar -xvf ibm_turbonomic_x86.tar
 ```
 
-Then cd into the newly created `turbonomic` directory, set the REPOSITORY environment variable to match the `turbonomic` namespace in the internal OpenShift Registry and run the `install_using_composable.sh` script from this Github repo. You will be asked to confirm that you have accepted the license agreement at the beginning of the installation script:
+Then cd into the newly created `turbonomic` directory, set the REPOSITORY environment variable to match the `turbonomic` namespace in the internal OpenShift Registry and then download and run the `install_using_composable.sh` script from this Github repo. You will be asked to confirm that you have accepted the license agreement at the beginning of the installation script:
 
 ```
 cd turbonomic
 export REPOSITORY=image-registry.openshift-image-registry.svc:5000/turbonomic
-curl "https://raw.githubusercontent.com/CloudPak-SDK/CP4M-Turbonomic-Composable-Install/main/install_using_composable.sh" | bash
+curl "https://raw.githubusercontent.com/CloudPak-SDK/CP4M-Turbonomic-Composable-Install/main/install_using_composable.sh" -LO
+chmod +x install_using_composable.sh
+./install_using_composable.sh
 ```
 
 ## Create the Turbonomic Administrator User and Grant Roles to CP4M Users
