@@ -22,7 +22,22 @@ chmod +x install_using_composable.sh
 ```
 
 ## Create the Turbonomic Administrator User and Grant Roles to CP4M Users
-TODO
+The installation script should finish with a similar to this:
+```
+Turbonomic Console URL is: https://api-turbonomic.apps.<my-cluster-domain>
+```
+Proceed to this URL in your browser. You will be asked to create an `Administrator` user for the new Turbonomic installation.
 
+![image](https://user-images.githubusercontent.com/62120488/113747837-6b719500-96cd-11eb-909c-47a18659c107.png)
+
+Create the `Adminstrator` user and then login as `Administrator`. Click `Let's Go` and then `Import License`. Then select and upload your license file. Once you have completed the inital setup, go to the settings tab and then enter the `User Management` menu. From here go to the `External Authentication` section and use the `New External User` and `New External Group` options to assign roles to CP4M users.
+
+![image](https://user-images.githubusercontent.com/62120488/113748490-2c900f00-96ce-11eb-996a-b918489d1c13.png)
+
+Now log out Turbonomic and proceed to the CP4M UI and login there. You should now see the option `Application Resource Manager` under the `Monitor Health` section of the CP4M menu.
+
+![image](https://user-images.githubusercontent.com/62120488/113748841-93152d00-96ce-11eb-9c7e-4a602ad92813.png)
+
+Click this option to open Turbonomic using SSO login.
 
 
