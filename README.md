@@ -11,7 +11,7 @@ Then download the IBM Turbonomic PPA there and then extract it:
 tar -xvf ibm_turbonomic_x86.tar
 ```
 
-Then cd into the newly created `turbonomic` directory, set the REPOSITORY environment variable to match the turbonomic namespace in the internal OpenShift Registry and run the `install_using_composable.sh` script from this Github repo. You will be asked to confirm that you have accepted the license agreement at the beginning of the installation script:
+Then cd into the newly created `turbonomic` directory, set the REPOSITORY environment variable to match the `turbonomic` namespace in the internal OpenShift Registry and run the `install_using_composable.sh` script from this Github repo. You will be asked to confirm that you have accepted the license agreement at the beginning of the installation script:
 
 ```
 cd turbonomic
