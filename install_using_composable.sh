@@ -219,7 +219,7 @@ spec:
                 - "Base64ToString" 
 EOF
 #Wait for API Pod to be ready
-until oc -n ${NS} get xl xl-release; do sleep 5; done
+until oc -n ${NS} get xl xl-release >> /dev/null 2>&1; do sleep 5; done
 sleep 60
 oc -n ${NS} wait --'for=condition=Ready' pod -l app.kubernetes.io/name=api --timeout 10m
 API_POD=$(oc -n ${NS} get po -l app.kubernetes.io/name=api -o go-template='{{ (index .items 0).metadata.name }}')
