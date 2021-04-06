@@ -32,9 +32,9 @@ Proceed to this URL in your browser. You will be asked to create an `Administrat
 
 Create the `Adminstrator` user and then login as `Administrator`. Click `Let's Go` and then `Import License`. Then select and upload your license file. Once you have completed the inital setup, go to the settings tab and then enter the `User Management` menu. From here go to the `External Authentication` section and use the `New External User` and `New External Group` options to assign roles to CP4M users.
 
-![image](https://user-images.githubusercontent.com/62120488/113748490-2c900f00-96ce-11eb-996a-b918489d1c13.png)
+![image](https://user-images.githubusercontent.com/62120488/113749210-04ed7680-96cf-11eb-8aab-041b6e395e2c.png)
 
-Now log out Turbonomic and proceed to the CP4M UI and login there. You should now see the option `Application Resource Manager` under the `Monitor Health` section of the CP4M menu.
+Now log out of Turbonomic and proceed to the CP4M UI and login there. You should now see the option `Application Resource Manager` under the `Monitor Health` section of the CP4M menu.
 
 ![image](https://user-images.githubusercontent.com/62120488/113748841-93152d00-96ce-11eb-9c7e-4a602ad92813.png)
 
