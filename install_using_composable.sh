@@ -226,6 +226,7 @@ API_POD=$(oc -n ${NS} get po -l app.kubernetes.io/name=api -o go-template='{{ (i
 until oc -n ${NS} get secret cs-ca-certificate-secret -o jsonpath={.data."ca\.crt"} | base64 -d > ca.crt 2>>/dev/null; do sleep 5; done
 KT=keytool
 which keytool >> /dev/null 2>&1 || tar xzf OpenJDK11U-jre_x64_linux_hotspot_11.0.7_10.tar.gz && KT=jdk-11.0.7+10-jre/bin/keytool
+cp /etc/pki/ca-trust/extracted/java/cacerts .
 rm -f cacerts && ${KT} -import -trustcacerts -alias cp -file ca.crt -keystore cacerts -storepass changeit -noprompt
 oc -n ${NS} cp cacerts ${API_POD}:/home/turbonomic/data
 oc -n ${NS} delete pod ${API_POD}
