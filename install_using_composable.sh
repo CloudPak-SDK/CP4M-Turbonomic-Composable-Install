@@ -24,19 +24,13 @@ export TAG=8.0.4
 IMAGE_TOOL=podman
 which podman >> /dev/null 2>&1 || IMAGE_TOOL=docker
 
-# load and push operators and kubeturbo images
-${IMAGE_TOOL} load -i images/kubeturbo-operator.tar
-${IMAGE_TOOL} tag kubeturbo-operator:8.0 $REPOSITORY/kubeturbo-operator:8.0
-${IMAGE_TOOL} push $REPOSITORY/kubeturbo-operator:8.0
-${IMAGE_TOOL} load -i images/t8c-operator.tar
-${IMAGE_TOOL} tag t8c-operator:8.0 $REPOSITORY/t8c-operator:8.0
-${IMAGE_TOOL} push $REPOSITORY/t8c-operator:8.0
-
 # load and push platform images
-images=( action-orchestrator api arangodb auth clustermgr consul cost db group history kafka kubeturbo market nginx plan-orchestrator repository rsyslog topology-processor ui zookeeper mediation-appdynamics mediation-dynatrace)
-for image in "${images[@]}"
+images_dir="images"
+tars=$(ls ${images_dir}/*.tar)
+for tar in "${tars[@]}"
 do
-	${IMAGE_TOOL} load -i images/$image.tar
+	image=${tar%.tar}
+	${IMAGE_TOOL} load -i ${images_dir}/$image.tar
 	${IMAGE_TOOL} tag $image:$TAG $REPOSITORY/$image:$TAG
 	${IMAGE_TOOL} push $REPOSITORY/$image:$TAG
 done
