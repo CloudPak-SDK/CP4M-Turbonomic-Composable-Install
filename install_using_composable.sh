@@ -25,15 +25,15 @@ IMAGE_TOOL=podman
 which podman >> /dev/null 2>&1 || IMAGE_TOOL=docker
 
 # load and push platform images
-images_dir="images"
-tars=$(ls ${images_dir}/*.tar)
-for tar in "${tars[@]}"
+cd images/
+for tar in "*.tar"
 do
 	image=${tar%.tar}
-	${IMAGE_TOOL} load -i ${images_dir}/$image.tar
+	${IMAGE_TOOL} load -i $image.tar
 	${IMAGE_TOOL} tag $image:$TAG $REPOSITORY/$image:$TAG
 	${IMAGE_TOOL} push $REPOSITORY/$image:$TAG
 done
+cd ..
 
 #Install
 NS=turbonomic
