@@ -29,7 +29,7 @@ cd images/
 for tar in "*.tar"
 do
 	image=${tar%.tar}
-	${IMAGE_TOOL} load -i $image.tar
+	${IMAGE_TOOL} load -i $tar
 	${IMAGE_TOOL} tag $image:$TAG $REPOSITORY/$image:$TAG
 	${IMAGE_TOOL} push $REPOSITORY/$image:$TAG
 done
