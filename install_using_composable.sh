@@ -18,7 +18,7 @@ fi
 if [ -z "${REPOSITORY}" ]; then
 	export REPOSITORY=turbonomic
 fi
-export TAG=8.0.4
+export TAG=8.2.0
 
 #Set the image tool
 IMAGE_TOOL=podman
