@@ -26,7 +26,8 @@ which podman >> /dev/null 2>&1 || IMAGE_TOOL=docker
 
 # load and push platform images
 cd images/
-for tar in "*.tar"
+FILES="*.tar"
+for tar in $FILES
 do
 	image=${tar%.tar}
 	${IMAGE_TOOL} load -i $tar
