@@ -14,11 +14,16 @@ then
 	exit 9
 fi
 
+# Set the namespace to turbonomic by default
+if [ -z "${NS}" ]; then
+	export NS=turbonomic
+fi
+
 # Use custom repository URL
 if [ -z "${REPOSITORY}" ]; then
-	export REPOSITORY=turbonomic
+	export REPOSITORY=registry.connect.redhat.comn/turbonomic
 fi
-export TAG=8.2.0
+export TAG=8.2.4
 
 #Set the image tool
 IMAGE_TOOL=podman
@@ -36,17 +41,9 @@ do
 done
 cd ..
 
-#Install
-NS=turbonomic
+#Create project
 oc get ns ${NS} >>/dev/null 2>&1 || oc create ns ${NS}
-
-#Install Turbonomic Operator
-oc -n ${NS} apply -f deploy/service_account.yaml -n turbonomic
-oc -n ${NS} apply -f deploy/role.yaml -n turbonomic
-oc -n ${NS} apply -f deploy/role_binding.yaml -n turbonomic
-oc -n ${NS} apply -f deploy/crds/charts_v1alpha1_xl_crd.yaml
-sed "s%turbonomic%${REPOSITORY}%g" deploy/operator.template > deploy/operator.yaml
-oc -n ${NS} apply -f deploy/operator.yaml -n turbonomic
+oc adm policy add-scc-to-group anyuid system:serviceaccounts:${NS}
 oc -n ${NS} get cm repository >>/dev/null 2>&1 || oc -n ${NS} create cm repository --from-literal=repository=${REPOSITORY}
 
 #Install CP4M Hooks
@@ -58,12 +55,12 @@ metadata:
 spec:
   registration:
     post_logout_redirect_uris:
-      - https://api-turbonomic.{{ .OpenShiftBaseUrl }}/app/index.html
+      - https://api-${NS}.{{ .OpenShiftBaseUrl }}/app/index.html
     trusted_uri_prefixes:
-      - https://api-turbonomic.{{ .OpenShiftBaseUrl }}
-      - https://api-turbonomic.{{ .OpenShiftBaseUrl }}:443
+      - https://api-${NS}.{{ .OpenShiftBaseUrl }}
+      - https://api-${NS}.{{ .OpenShiftBaseUrl }}:443
     redirect_uris:
-      - https://api-turbonomic.{{ .OpenShiftBaseUrl }}/vmturbo/oauth2/login/code/ibm
+      - https://api-${NS}.{{ .OpenShiftBaseUrl }}/vmturbo/oauth2/login/code/ibm
     client_secret:
       secretName: turbonomic-oidc-secret
       secretKey: CLIENT_SECRET
@@ -94,7 +91,7 @@ spec:
     - name: Auditor
     - name: AccountAdministrator
   # The URL that the new menu entry will link to
-  url: https://api-turbonomic.{{ .OpenShiftBaseUrl }}/vmturbo/oauth2/authorization/ibm
+  url: https://api-${NS}.{{ .OpenShiftBaseUrl }}/vmturbo/oauth2/authorization/ibm
 EOF
 
 #Install Composable
@@ -103,13 +100,14 @@ apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
   annotations:
-    olm.providedAPIs: Composable.v1alpha1.ibmcloud.ibm.com
-  name: turbonomic-rvbhs
+    olm.providedAPIs: Composable.v1alpha1.ibmcloud.ibm.com, Xl.v1.charts.helm.k8s.io
+  name: turbonomic-mkk5d
   namespace: ${NS}
 spec:
   targetNamespaces:
   - ${NS}
 EOF
+
 cat << EOF | oc -n ${NS} apply -f -
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
@@ -119,15 +117,29 @@ metadata:
   name: composable-operator
   namespace: ${NS}
 spec:
-  installPlanApproval: Automatic
   name: composable-operator
   source: community-operators
   sourceNamespace: openshift-marketplace
 EOF
+until oc get crd composables.ibmcloud.ibm.com >> /dev/null 2>&1; do sleep 5; done
+
+cat << EOF | oc -n ${NS} apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  labels:
+    operators.coreos.com/t8c-certified.turbonomic: ""
+  name: t8c-certified
+  namespace: ${NS}
+spec:
+  name: t8c-certified
+  source: certified-operators
+  sourceNamespace: openshift-marketplace
+EOF
+until oc get crd xls.charts.helm.k8s.io >> /dev/null 2>&1; do sleep 5; done
 
 #Install Turbonomic Composable
 echo "Installing Turbonomic Composable"
-until oc get crd composables.ibmcloud.ibm.com >> /dev/null 2>&1; do sleep 5; done
 cat << EOF | oc -n ${NS} apply -f -
 apiVersion: ibmcloud.ibm.com/v1alpha1
 kind: Composable
@@ -150,13 +162,18 @@ spec:
             kind: ConfigMap
             name: repository
             path: '{.data.repository}'
-        tag: 8.0.4
+        tag: 8.2.4
+        externalArangoDBName: arango.turbo.svc.cluster.local
+#        securityContext:
+#          fsGroup: 1000640000
         customImageNames: false
         annotations:
           prometheus.io/port: "8080"
           prometheus.io/scrape: "true"
 
       nginxingress:
+        enabled: false
+      ui:
         enabled: false
       openshiftingress:
         enabled: true
