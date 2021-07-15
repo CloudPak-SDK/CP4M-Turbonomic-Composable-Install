@@ -21,7 +21,7 @@ fi
 
 # Use custom repository URL
 if [ -z "${REPOSITORY}" ]; then
-	export REPOSITORY=registry.connect.redhat.comn/turbonomic
+	export REPOSITORY=registry.connect.redhat.com/turbonomic
 fi
 export TAG=8.2.4
 
@@ -245,5 +245,3 @@ oc -n ${NS} delete pod ${API_POD}
 oc -n ${NS} wait --'for=condition=Ready' pod -l app.kubernetes.io/name=api --timeout 10m
 TURBO_ROUTE=$(oc get route api -o jsonpath='{.spec.host}')
 echo "Turbonomic Console URL is: https://${TURBO_ROUTE}"
-
-

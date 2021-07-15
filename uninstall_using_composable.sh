@@ -5,11 +5,6 @@ if [ -z "${NS}" ]; then
 	export NS=turbonomic
 fi
 
-# Use custom repository URL
-if [ -z "${REPOSITORY}" ]; then
-	export REPOSITORY=image-registry.openshift-image-registry.svc:5000/${NS}
-fi
-
 # bring down the platform and delete the operator
 oc delete Composable turbonomic-release --cascade='foreground' -n ${NS}
 oc delete NavMenuEntry turbonomic-navmenu -n ${NS}
