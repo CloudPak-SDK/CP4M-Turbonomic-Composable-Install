@@ -113,21 +113,6 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
   labels:
-    operators.coreos.com/composable-operator.turbonomic: ""
-  name: composable-operator
-  namespace: ${NS}
-spec:
-  name: composable-operator
-  source: community-operators
-  sourceNamespace: openshift-marketplace
-EOF
-until oc get crd composables.ibmcloud.ibm.com >> /dev/null 2>&1; do sleep 5; done
-
-cat << EOF | oc -n ${NS} apply -f -
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  labels:
     operators.coreos.com/t8c-certified.turbonomic: ""
   name: t8c-certified
   namespace: ${NS}
@@ -137,6 +122,23 @@ spec:
   sourceNamespace: openshift-marketplace
 EOF
 until oc get crd xls.charts.helm.k8s.io >> /dev/null 2>&1; do sleep 5; done
+
+sleep 30
+
+cat << EOF | oc -n ${NS} apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  labels:
+    operators.coreos.com/composable-operator.turbonomic: ""
+  name: composable-operator
+  namespace: ${NS}
+spec:
+  name: composable-operator
+  source: community-operators
+  sourceNamespace: openshift-marketplace
+EOF
+until oc get crd composables.ibmcloud.ibm.com >> /dev/null 2>&1; do sleep 5; done
 
 #Install Turbonomic Composable
 echo "Installing Turbonomic Composable"
