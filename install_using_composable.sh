@@ -123,8 +123,6 @@ spec:
 EOF
 until oc get crd xls.charts.helm.k8s.io >> /dev/null 2>&1; do sleep 5; done
 
-sleep 30
-
 cat << EOF | oc -n ${NS} apply -f -
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
