@@ -14,7 +14,7 @@ oc delete OidcClientRegistration turbonomic-oidc-registration -n ${NS}
 oc delete Subscription t8c-certified -n ${NS}
 oc delete Subscription composable-operator -n ${NS}
 oc delete ClusterServiceVersion composable-operator.v0.1.3 -n ${NS}
-oc delete ClusterServiceVersion t8c-operator.v8.1.0 -n ${NS}
+oc delete ClusterServiceVersion t8c-operator.v42.6.0 -n ${NS}
 
 # Let the user delete the project afterwards
 #oc delete ns ${NS}

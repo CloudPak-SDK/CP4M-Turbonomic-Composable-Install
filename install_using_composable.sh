@@ -23,7 +23,8 @@ fi
 if [ -z "${REPOSITORY}" ]; then
 	export REPOSITORY=registry.connect.redhat.com/turbonomic
 fi
-export TAG=8.2.4
+export TAG=8.4.3
+export CP_ROUTE=$(oc get route -n ibm-common-services cp-console -o jsonpath='{.spec.host}')
 
 #Set the image tool
 IMAGE_TOOL=podman
@@ -45,6 +46,9 @@ cd ..
 oc get ns ${NS} >>/dev/null 2>&1 || oc create ns ${NS}
 oc adm policy add-scc-to-group anyuid system:serviceaccounts:${NS}
 oc -n ${NS} get cm repository >>/dev/null 2>&1 || oc -n ${NS} create cm repository --from-literal=repository=${REPOSITORY}
+#Create a master encryption key
+openssl rand 32 > primary_key_256.out
+kubectl create secret -n ${NS} generic master-key-secret --from-file=primary_key_256.out=primary_key_256.out
 
 #Install CP4M Hooks
 cat << EOF | oc -n ${NS} apply -f -
@@ -61,6 +65,7 @@ spec:
       - https://api-${NS}.{{ .OpenShiftBaseUrl }}:443
     redirect_uris:
       - https://api-${NS}.{{ .OpenShiftBaseUrl }}/vmturbo/oauth2/login/code/ibm
+      - https://api-${NS}.{{ .OpenShiftBaseUrl }}/vmturbo/oauth2/login/code/cp-console.{{ .OpenShiftBaseUrl }}
     client_secret:
       secretName: turbonomic-oidc-secret
       secretKey: CLIENT_SECRET
@@ -91,7 +96,7 @@ spec:
     - name: Auditor
     - name: AccountAdministrator
   # The URL that the new menu entry will link to
-  url: https://api-${NS}.{{ .OpenShiftBaseUrl }}/vmturbo/oauth2/authorization/ibm
+  url: https://api-${NS}.{{ .OpenShiftBaseUrl }}/vmturbo/oauth2/authorization/cp-console.{{ .OpenShiftBaseUrl }}
 EOF
 
 #Install Composable
@@ -162,8 +167,8 @@ spec:
             kind: ConfigMap
             name: repository
             path: '{.data.repository}'
-        tag: 8.2.4
-        externalArangoDBName: arango.turbo.svc.cluster.local
+        tag: ${TAG}
+        enableExternalSecrets: true
 #        securityContext:
 #          fsGroup: 1000640000
         customImageNames: false
@@ -179,12 +184,12 @@ spec:
         enabled: true
 
       api:
-        javaComponentOptions: "-Djavax.net.ssl.trustStore=/home/turbonomic/data/cacerts"
+        javaComponentOptions: "-Djavax.net.ssl.trustStore=/home/turbonomic/data/helpder_dir/cacerts"
 
       properties:
         api:
           openIdEnabled: true
-          openIdClients: ibm
+          openIdClients: ${CP_ROUTE}
           openIdClientAuthentication: post
           openIdUserAuthentication: form
           openIdClientId:
@@ -193,42 +198,21 @@ spec:
               name: turbonomic-oidc-secret
               path: '{.data.CLIENT_ID}'
               format-transformers:
-                - "Base64ToString" 
+                - "Base64ToString"
           openIdClientSecret:
             getValueFrom:
               kind: Secret
               name: turbonomic-oidc-secret
               path: '{.data.CLIENT_SECRET}'
               format-transformers:
-                - "Base64ToString" 
-          openIdAccessTokenUri:
+                - "Base64ToString"
+          openIdIssuerLocation:
             getValueFrom:
               kind: Secret
               name: turbonomic-oidc-secret
-              path: '{.data.TOKEN_ENDPOINT}'
+              path: '{.data.BASE_ID_PROVIDER_OIDC_URL}'
               format-transformers:
-                - "Base64ToString" 
-          openIdUserAuthorizationUri:
-            getValueFrom:
-              kind: Secret
-              name: turbonomic-oidc-secret
-              path: '{.data.AUTHORIZE_ENDPOINT}'
-              format-transformers:
-                - "Base64ToString" 
-          openIdUserInfoUri: 
-            getValueFrom:
-              kind: Secret
-              name: turbonomic-oidc-secret
-              path: '{.data.USER_INFO_ENDPOINT}'
-              format-transformers:
-                - "Base64ToString" 
-          openIdJwkSetUri: 
-            getValueFrom:
-              kind: Secret
-              name: turbonomic-oidc-secret
-              path: '{.data.JWK_ENDPOINT}'
-              format-transformers:
-                - "Base64ToString" 
+                - "Base64ToString"
 EOF
 #Wait for API Pod to be ready
 until oc -n ${NS} get xl xl-release >>/dev/null 2>&1; do sleep 5; done
@@ -240,8 +224,8 @@ KT=keytool
 which keytool >> /dev/null 2>&1 || tar xzf OpenJDK11U-jre_x64_linux_hotspot_11.0.7_10.tar.gz && KT=jdk-11.0.7+10-jre/bin/keytool
 rm -f cacerts && cp /etc/pki/ca-trust/extracted/java/cacerts .
 ${KT} -import -trustcacerts -alias cp -file ca.crt -keystore cacerts -storepass changeit -noprompt
-oc -n ${NS} cp cacerts ${API_POD}:/home/turbonomic/data
+oc create secret generic api-secret -n ${NS} --from-file=cacerts=cacerts
 oc -n ${NS} delete pod ${API_POD}
 oc -n ${NS} wait --'for=condition=Ready' pod -l app.kubernetes.io/name=api --timeout 10m
-TURBO_ROUTE=$(oc get route api -o jsonpath='{.spec.host}')
+TURBO_ROUTE=$(oc get route api -n ${NS} -o jsonpath='{.spec.host}')
 echo "Turbonomic Console URL is: https://${TURBO_ROUTE}"
