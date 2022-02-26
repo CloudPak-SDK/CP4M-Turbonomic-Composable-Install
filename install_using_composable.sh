@@ -184,7 +184,7 @@ spec:
         enabled: true
 
       api:
-        javaComponentOptions: "-Djavax.net.ssl.trustStore=/home/turbonomic/data/helpder_dir/cacerts"
+        javaComponentOptions: "-Djavax.net.ssl.trustStore=/home/turbonomic/data/helper_dir/cacerts"
 
       properties:
         api:
@@ -217,15 +217,12 @@ EOF
 #Wait for API Pod to be ready
 until oc -n ${NS} get xl xl-release >>/dev/null 2>&1; do sleep 5; done
 sleep 10
-oc -n ${NS} wait --'for=condition=Ready' pod -l app.kubernetes.io/name=api --timeout 10m
-API_POD=$(oc -n ${NS} get po -l app.kubernetes.io/name=api -o go-template='{{ (index .items 0).metadata.name }}')
 until oc -n ${NS} get secret cs-ca-certificate-secret -o jsonpath={.data."ca\.crt"} | base64 -d > ca.crt 2>>/dev/null; do sleep 5; done
 KT=keytool
 which keytool >> /dev/null 2>&1 || tar xzf OpenJDK11U-jre_x64_linux_hotspot_11.0.7_10.tar.gz && KT=jdk-11.0.7+10-jre/bin/keytool
 rm -f cacerts && cp /etc/pki/ca-trust/extracted/java/cacerts .
 ${KT} -import -trustcacerts -alias cp -file ca.crt -keystore cacerts -storepass changeit -noprompt
 oc create secret generic api-secret -n ${NS} --from-file=cacerts=cacerts
-oc -n ${NS} delete pod ${API_POD}
 oc -n ${NS} wait --'for=condition=Ready' pod -l app.kubernetes.io/name=api --timeout 10m
 TURBO_ROUTE=$(oc get route api -n ${NS} -o jsonpath='{.spec.host}')
 echo "Turbonomic Console URL is: https://${TURBO_ROUTE}"
